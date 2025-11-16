@@ -90,7 +90,7 @@ export const register = async (req,res)=>{
         });
 
     }catch(error){
-        return res.status(400).json({msg:error.message});
+        return res.status(500).json({msg: "Internal server error"});
     }
 }
 
@@ -126,7 +126,7 @@ export const verifyEmail = async (req,res)=>{
 
         return res.status(200).json({ msg: "Email verified successfully"});
     }catch(error){
-        return res.status(400).json({msg:error.message});
+        return res.status(500).json({msg: "Internal server error"});
     }     
 }
 
@@ -166,7 +166,7 @@ export const resendOtp = async (req,res)=>{
         return res.status(200).json({ msg: "New OTP sent" });
 
     }catch(error){
-        return res.status(400).json({msg:error.message});
+        return res.status(500).json({msg: "Internal server error"});
     }
 }
 
@@ -201,7 +201,7 @@ export const login = async (req,res)=>{
         });
 
     }catch(error){
-        return res.status(400).json({msg:error.message});
+        return res.status(500).json({msg: "Internal server error"});
     }
 }
 
@@ -256,7 +256,7 @@ export const sendResetPasswordOtp = async (req,res)=>{
         });
 
     }catch(error){
-        return res.status(400).json({msg:error.message});
+        return res.status(500).json({msg: "Internal server error"});
     }
 }   
 
@@ -298,7 +298,7 @@ export const resetPassword = async (req,res)=>{
         return res.status(200).json({msg:"Password reset successful"});
 
     }catch(error){
-        return res.status(400).json({msg:error.message});
+        return res.status(500).json({msg: "Internal server error"});
     }
 }
 
