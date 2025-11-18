@@ -1,5 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
+import cors from "cors";
+
 dotenv.config();
 
 import connectDB from "./src/config/db.js";
@@ -10,6 +12,8 @@ import taskRouter from "./src/routes/taskRoutes.js";
 
 const app = express(); 
 app.use(express.json());
+app.use(cors({origin: "http://localhost:5173",credentials:true,}));
+
 
 connectDB();
 

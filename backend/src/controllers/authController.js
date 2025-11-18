@@ -14,7 +14,7 @@ export const register = async (req,res)=>{
         const exists = await userModel.findOne({email});
 
         if(exists && exists.emailVerified){
-            return res.status(400).json({msg:"Email already registered"});
+            return res.status(409).json({login:true,msg:"Email already exists"});
         }
 
         if(exists && !exists.emailVerified){
@@ -42,15 +42,15 @@ export const register = async (req,res)=>{
 
             await transporter.sendMail(mailOptions);
 
-            return res.status(200).json({ 
-                msg: "OTP resent. Verify your email.", 
-                verify: false
+            return res.status(409).json({ 
+                verify:true,
+                msg: "Email already exists, OTP resent. Verify your email.", 
             });
         }
 
         const dup_username = await userModel.findOne({username});
         if(dup_username){
-            return res.status(400).json({msg:"Username already exists"});
+            return res.status(409).json({msg:"Username already exists"});
         }
 
         if(password.length<8){
@@ -84,9 +84,9 @@ export const register = async (req,res)=>{
 
         await transporter.sendMail(mailOptions);
 
-        return res.status(200).json({
+        return res.status(201).json({
+            verify:true,
             msg:"Registration successful, verify your email",
-            verify: false
         });
 
     }catch(error){
@@ -104,7 +104,7 @@ export const verifyEmail = async (req,res)=>{
     try{
         const userId = req.session.userId;
         if(!userId){
-            return res.status(400).json({msg:"Session expired. Login or Register again."});
+            return res.status(400).json({sessionExpired:true,msg:"Session expired. Login or Register again."});
         }
 
         const user = await userModel.findById(userId);
@@ -133,7 +133,7 @@ export const verifyEmail = async (req,res)=>{
 export const resendOtp = async (req,res)=>{
     const userId = req.session.userId;
     if(!userId){
-        return res.status(400).json({msg:"Session expired, Login or register again"});
+        return res.status(400).json({sessionExpired:true,msg:"Session expired, Login or register again"});
     }
     try{
         const user = await userModel.findById(userId);
@@ -142,7 +142,20 @@ export const resendOtp = async (req,res)=>{
         }
 
         if(user.emailVerified){
-            return res.status(400).json({msg:"Email already verified"})
+            return res.status(400).json({login:true,msg:"Email already verified"})
+        }
+
+        const now = Date.now();
+        const lastSentAt = user.verifyEmailOtpExpireAt - 10*60*1000;
+
+        // ❗ Cooldown: Allow resend only if 1 min passed OR OTP expired
+        if (now-lastSentAt<60*1000) { // OTP expiry is 10 minutes
+            const retryAfter = Math.ceil((60 * 1000 - (now-lastSentAt)) / 1000);
+
+            return res.status(429).json({
+                msg: `Wait ${retryAfter}s before requesting another OTP`
+            });
+
         }
 
         const otp = String(Math.floor(100000 + Math.random() * 900000));
@@ -226,7 +239,7 @@ export const sendResetPasswordOtp = async (req,res)=>{
         }
 
         if(!user.emailVerified) {
-            return res.status(400).json({ msg: "Please verify your email first" });
+            return res.status(400).json({verify:true, msg: "Please verify your email first" });
         }
         
         const otp = String(Math.floor(100000+Math.random()*900000));
@@ -252,7 +265,6 @@ export const sendResetPasswordOtp = async (req,res)=>{
 
         return res.status(200).json({ 
             msg: "Reset password OTP sent to your email", 
-            resetVerify: false // for sending to the rentering new password page
         });
 
     }catch(error){
@@ -265,7 +277,7 @@ export const resetPassword = async (req,res)=>{
     try{
         const userId = req.session.resetUserId;
         if(!userId){
-            return res.status(400).json({msg:"Session expired. Request OTP again"});
+            return res.status(400).json({sessionExpired:true,msg:"Session expired. Request OTP again"});
         }
 
         const user = await userModel.findById(userId);
@@ -278,7 +290,7 @@ export const resetPassword = async (req,res)=>{
         }
 
         if (user.resetPasswordOtpExpireAt < Date.now()) {
-            return res.status(400).json({ msg: "OTP expired. Request a new one." });
+            return res.status(400).json({otpExpired:true, msg: "OTP expired. Request a new one." });
         }
 
         user.resetPasswordOtp = null;
@@ -295,10 +307,21 @@ export const resetPassword = async (req,res)=>{
 
         await user.save();
 
-        return res.status(200).json({msg:"Password reset successful"});
+        return res.status(200).json({msg:"Password reset successful, login now"});
 
     }catch(error){
         return res.status(500).json({msg: "Internal server error"});
+    }
+}
+
+export const checkAuth = async (req,res)=>{
+    try{
+        if(!req.session.userId){
+            return res.status(401).json({loggedIn:false});
+        }
+        return res.status(200).json({loggedIn:true});
+    }catch(error){
+        return res.status(500).json({loggedIn:true});
     }
 }
 

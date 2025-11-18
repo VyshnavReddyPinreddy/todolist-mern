@@ -1,0 +1,23 @@
+{
+  "name": "todolist",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "backend": "cd backend && npm start",
+    "frontend": "cd frontend && npm run dev",
+    "dev": "concurrently --names \"BACKEND,FRONTEND\" --prefix-colors \"red,blue\" \"npm run backend\" \"npm run frontend\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VyshnavReddyPinreddy/todolist-mern.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/VyshnavReddyPinreddy/todolist-mern/issues"
+  },
+  "homepage": "https://github.com/VyshnavReddyPinreddy/todolist-mern#readme"
+}
