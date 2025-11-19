@@ -153,7 +153,7 @@ export const PASSWORD_RESET_TEMPLATE = `
     </div>
 
     <div class="footer">
-      If you did not request this, please secure your account immediately.
+      If you did not request this, please ignore the message.
     </div>
 
   </div>

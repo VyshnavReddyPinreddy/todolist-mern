@@ -5,6 +5,10 @@ export function loginUser(data) {
   return axiosInstance.post("/auth/login", data);
 }
 
+export function logoutUser(){
+  return axiosInstance.post("/auth/logout");
+}
+
 export function registerUser(data) {
   return axiosInstance.post("/auth/register", data);
 }
@@ -27,4 +31,8 @@ export function resetPassword(data) {
 
 export function checkAuth(){
   return axiosInstance.get("/auth/check-auth");
+}
+
+export function fetchUsername(){
+  return axiosInstance.get("/user/username");
 }
