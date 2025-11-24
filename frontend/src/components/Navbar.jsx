@@ -51,7 +51,7 @@ const Navbar = () => {
   };
 
   return (
-    <div className='w-full bg-white shadow-md p-4 flex justify-between items-center sticky top-0'>
+    <div className='w-full bg-gray-200 shadow-md p-4 flex justify-between items-center sticky top-0'>
       <h2 className="text-xl font-semibold text-gray-800">
         Hello <span className='text-blue-600'>{username}</span>!
       </h2>

@@ -36,3 +36,26 @@ export function checkAuth(){
 export function fetchUsername(){
   return axiosInstance.get("/user/username");
 }
+
+export function createTask(data){
+  return axiosInstance.post("/task",data);
+}
+
+export function viewTasks(){
+  return axiosInstance.get("/task/");
+}
+
+export function deleteTask(id){
+  return axiosInstance.delete(`/task/${id}`);
+}
+
+export function updateTask(id,data){
+  return axiosInstance.put(`/task/${id}`,data);
+}
+
+export function markTask(id){
+  return axiosInstance.patch(`/task/${id}/complete`);
+}
+
+
+

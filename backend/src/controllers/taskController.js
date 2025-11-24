@@ -6,6 +6,14 @@ export const createTask = async (req,res)=>{
     if(!title || !deadline){
         return res.status(400).json({msg:"Title and deadline are required"});
     }
+
+    const selectedDeadline = new Date(deadline);
+    const now = new Date();
+
+    if (selectedDeadline <= now) {
+        return res.status(400).json({ msg: "Deadline cannot be in the past" });
+    }
+
     const userId = req.session.userId;
     try{
         const user = await userModel.findById(userId);
@@ -23,7 +31,6 @@ export const createTask = async (req,res)=>{
 export const viewAllTasks = async (req, res) => {
 
     const userId = req.session.userId;
-    const { sort, order = "desc", completed, priority } = req.query;
 
     try {
         const user = await userModel.findById(userId);
@@ -31,105 +38,7 @@ export const viewAllTasks = async (req, res) => {
             return res.status(401).json({ msg: "User not found" });
         }
 
-        // BASE FILTER
-        const filter = { userId };
-
-        // COMPLETED FILTER
-        if (completed !== undefined) {
-            filter.completed = completed === "true";
-        }
-
-        // PRIORITY FILTER
-        if (priority !== undefined) {
-            const allowedPriorities = ["low", "medium", "high"];
-            let priorities = [];
-
-            if (typeof priority === "string" && priority.includes(",")) {
-                priorities = priority.split(",").map(p => p.trim());
-            } else if (Array.isArray(priority)) {
-                priorities = priority.map(p => p.trim());
-            } else {
-                priorities = [priority];
-            }
-
-            for (const p of priorities) {
-                if (!allowedPriorities.includes(p)) {
-                    return res.status(400).json({ msg: "Invalid priority value" });
-                }
-            }
-
-            filter.priority = { $in: priorities };
-        }
-
-        // SEARCH FILTER
-        if (req.query.search) {
-            const search = req.query.search.trim();
-            const words = search.split(/\s+/);
-            const regexArray = words.map(word => ({
-                $or: [
-                    { title: new RegExp(word, "i") },
-                    { description: new RegExp(word, "i") }
-                ]
-            }));
-            filter.$and = regexArray;
-        }
-
-        // DEADLINE RANGE FILTER
-        const { from, to } = req.query;
-        if (from || to) {
-            filter.deadline = {};
-            if (from) filter.deadline.$gte = new Date(from);
-            if (to) filter.deadline.$lte = new Date(to);
-        }
-
-        // MULTI-FIELD SORTING
-        const allowedSortFields = [
-            "deadline", "createdAt", "updatedAt", "title", "priority"
-        ];
-
-        const sortOptions = {};
-
-        if (sort) {
-            let sortFields = [];
-            let orderFields = [];
-
-            // Parse multiple sort fields
-            if (typeof sort === "string" && sort.includes(",")) {
-                sortFields = sort.split(",").map(s => s.trim());
-            } else if (Array.isArray(sort)) {
-                sortFields = sort.map(s => s.trim());
-            } else {
-                sortFields = [sort];
-            }
-
-            // Parse multiple orders
-            if (Array.isArray(order)) {
-                orderFields = order.map(o => o.trim());
-            } else if (typeof order === "string" && order.includes(",")) {
-                orderFields = order.split(",").map(o => o.trim());
-            } else {
-                orderFields = [order];
-            }
-
-            // Validate sort fields
-            for (const field of sortFields) {
-                if (!allowedSortFields.includes(field)) {
-                    return res.status(400).json({ msg: `Invalid sort field: ${field}` });
-                }
-            }
-
-            // Build sortOptions object
-            sortFields.forEach((field, index) => {
-                const direction = orderFields[index] === "asc" ? 1 : -1;
-                sortOptions[field] = direction;
-            });
-
-        } else {
-            sortOptions.createdAt = -1; // Default sort
-        }
-
-        // EXECUTE QUERY
-        const tasks = await taskModel.find(filter).sort(sortOptions);
+        const tasks = await taskModel.find({userId});
 
         return res.status(200).json({ msg: "Tasks fetched successfully", tasks });
 
@@ -185,8 +94,11 @@ export const markTask = async (req,res)=>{
 
         await task.save();
 
-        return res.status(200).json({msg:"Task marked successfully"});
-        
+        const message = task.completed
+                        ? "Task marked successfully"
+                        : "Task unmarked successfully";
+
+        return res.status(200).json({ msg: message });
     }catch(error){
         res.status(500).json({msg:"Internal server error"});
     }
