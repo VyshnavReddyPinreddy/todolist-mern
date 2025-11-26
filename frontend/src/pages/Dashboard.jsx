@@ -6,6 +6,7 @@ import { viewTasks,deleteTask,markTask } from '../services/api';
 import { toast } from "react-toastify";
 import { assets } from '../assets/asset';
 import CreateTaskModal from '../components/CreateTaskModal';
+import FilterBar from '../components/FilterBar';
 
 const Dashboard = () => {
   const [loading,setLoading] = useState(true);
@@ -63,6 +64,29 @@ const Dashboard = () => {
     setOpenModal(true);
   }
 
+  const handleApplyFilter = async (filters)=>{
+    console.log(filters);
+    try{
+      const res = await viewTasks(filters);
+      setTasks(res.data.tasks);
+      toast.success("Filter applied");
+    }catch(error){
+      toast.error("Error");
+      setTasks([]);
+    }
+  };
+
+  const handleClearFilter = async ()=>{
+    try {
+      const res = await viewTasks();
+      setTasks(res.data.tasks);
+      toast.success("Filter removed");
+    } catch (error) {
+      toast.error("Error");
+      setTasks([]);
+    }
+  }
+
   if(loading) return <p className="text-center text-gray-600 mt-10">Loading...</p>
 
   return tasks.length===0 ? <p className="text-center text-gray-600 mt-10">Create some tasks</p>
@@ -70,6 +94,12 @@ const Dashboard = () => {
                           (
                             <>
                               <Navbar/>
+                              
+                              <FilterBar 
+                                onApply={handleApplyFilter}
+                                onClear={handleClearFilter}
+                              />
+
                               <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
                               {tasks.map(task=>(
                                         <TaskCard 
@@ -87,7 +117,7 @@ const Dashboard = () => {
                                                 hover:cursor-pointer
                                                 flex items-center justify-center 
                                                 transition-all duration-200"                                
-                                    onClick={()=>setOpenModal(true)}          
+                                    onClick={handleCreate}          
                               />
 
                               {openModal && (

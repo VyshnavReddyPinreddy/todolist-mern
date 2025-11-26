@@ -41,8 +41,8 @@ export function createTask(data){
   return axiosInstance.post("/task",data);
 }
 
-export function viewTasks(){
-  return axiosInstance.get("/task/");
+export function viewTasks(query={}){
+  return axiosInstance.get("/task/",{params:query});
 }
 
 export function deleteTask(id){
